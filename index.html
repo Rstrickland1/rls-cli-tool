@@ -11,15 +11,18 @@
             font-family: 'Inter', sans-serif;
         }
         .input-field {
-            @apply w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all duration-200;
+            @apply w-full px-3 py-2 border rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all duration-200;
         }
-        /* Rule to make the selected item's text white */
-        select.input-field {
+        /* Explicitly style text inputs for the dark theme */
+        input.input-field {
+            background-color: #374151; /* gray-700 */
+            border-color: #4B5563;   /* gray-600 */
             color: white;
         }
-        /* Rule to make the dropdown options' text black and readable */
-        select option {
-            background-color: white;
+        /* Override for select dropdowns to a light theme to ensure option visibility */
+        select.input-field {
+            background-color: #F3F4F6; /* gray-100 */
+            border-color: #9CA3AF;   /* gray-400 */
             color: black;
         }
         .label {
