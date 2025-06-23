@@ -11,13 +11,18 @@
             font-family: 'Inter', sans-serif;
         }
         .input-field {
-            @apply w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all duration-200;
+            @apply w-full px-3 py-2 border rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all duration-200;
         }
+        /* Style text inputs for the dark theme */
+        input[type="text"].input-field, input[type="number"].input-field {
+            background-color: #374151; /* gray-700 */
+            border-color: #4B5563;   /* gray-600 */
+            color: white;
+        }
+        /* Override for select dropdowns to a light theme to ensure option visibility */
         select.input-field {
-            color: white; /* Make the selected text white */
-        }
-        select option {
-            background-color: white;
+            background-color: #F9FAFB; /* gray-50 */
+            border-color: #9CA3AF;   /* gray-400 */
             color: black;
         }
         .label {
@@ -136,12 +141,14 @@
                  "set_pfg_attribute": { name: "Set PFG Attribute", base: "set functional-group <pfg_name> attrs <attr_name> value <attr_value>", params: [{ name: "pfg_name", label: "PFG Name", type: "text", placeholder: "e.g., LM-SiteA-East" }, { name: "attr_name", label: "Attribute Name", type: "select", options: ["BAND", "DEGREE", "OSCFIB", "DOWNSTR-PFG-NEIGHBOR", "UPSTR-PFG-NEIGHBOR"] }, { name: "attr_value", label: "Attribute Value", type: "text", placeholder: "e.g., BAND-C" }] },
                 "show_pfg_calibration": { name: "Show PFG Calibration (SCO)", base: "show sco <sco_name>", params: [{ name: "sco_name", label: "SCO Instance Name", type: "text", placeholder: "e.g., LM-SiteA-East-SCO" }] }
             },
-            "OSRP & DTL (L0 Control Plane)": {
+            "OSRP & L0 Control Plane": {
                 "create_dtl": { name: "Create DTL Path", base: "create osrp <node_name> object dtl <dtl_name> label \"<label>\"", params: [{ name: "node_name", label: "Originating OSRP Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "dtl_name", label: "New DTL Name", type: "text", placeholder: "e.g., DTL_VAN_to_HAL" }, { name: "label", label: "Label", type: "text", placeholder: "e.g., Path to Halifax" }] },
                 "add_dtl_hop": { name: "Add a Hop to a DTL Path", base: "set osrp <node_name> object dtl <dtl_name> dtl-data <hop_node_name> link <link_id>", params: [{ name: "node_name", label: "Originating OSRP Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "dtl_name", label: "DTL Name", type: "text", placeholder: "e.g., DTL_VAN_to_HAL" }, { name: "hop_node_name", label: "Current Hop Node Name", type: "text", placeholder: "e.g., WINNIPEG:SECTIONMUX-S1" }, { name: "link_id", label: "OSRP Link ID for Next Hop", type: "text", placeholder: "e.g., 105300" }] },
                 "create_dtl_set": { name: "Create DTL Set", base: "create osrp <node_name> object dtl-set <set_name> source <source_node> destination <dest_node>", params: [{ name: "node_name", label: "Originating OSRP Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "set_name", label: "New DTL Set Name", type: "text", placeholder: "e.g., VAN_HAL_Set" }, { name: "source_node", label: "Source Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "dest_node", label: "Destination Node", type: "text", placeholder: "e.g., HALIFAX:CHANNELMUX-S6" }] },
                 "add_dtl_to_set": { name: "Add DTL to a DTL Set", base: "set osrp <node_name> object dtl-set <set_name> members <dtl_name>", params: [{ name: "node_name", label: "Originating OSRP Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "set_name", label: "DTL Set Name", type: "text", placeholder: "e.g., VAN_HAL_Set" }, { name: "dtl_name", label: "DTL Name to Add", type: "text", placeholder: "e.g., DTL_VAN_to_HAL" }] },
-                "delete_dtl": { name: "Delete DTL", base: "delete osrp <node_name> object dtl <dtl_name>", params: [{ name: "node_name", label: "OSRP Node Name", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "dtl_name", label: "DTL Name", type: "text", placeholder: "e.g., DTL_VAN_to_HAL" }] }
+                "delete_dtl": { name: "Delete DTL", base: "delete osrp <node_name> object dtl <dtl_name>", params: [{ name: "node_name", label: "OSRP Node Name", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "dtl_name", label: "DTL Name", type: "text", placeholder: "e.g., DTL_VAN_to_HAL" }] },
+                "create_snc": { name: "Create SNC", base: "create osrp <node_name> object snc <snc_name> dtl-set <dtl_set_name>", params: [{ name: "node_name", label: "Originating OSRP Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "snc_name", label: "SNC Name", type: "text", placeholder: "e.g., SNC-1" }, { name: "dtl_set_name", label: "DTL Set Name", type: "text", placeholder: "e.g., VAN_HAL_Set" }] },
+                "create_sncg": { name: "Create SNCG", base: "create osrp <node_name> object snc-group <sncg_name> label \"<label>\"", params: [{ name: "node_name", label: "Originating OSRP Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "sncg_name", label: "SNC Group Name", type: "text", placeholder: "e.g., SNCG-Protected" }, { name: "label", label: "Label", type: "text", placeholder: "e.g., Protected Service" }] }
             },
             "Security & Users": {
                 "create_local_user": { name: "Create Local User", base: "create security-aaa local user <username> access-level <level>", params: [{ name: "username", label: "Username", type: "text", placeholder: "e.g., newadmin" }, { name: "level", label: "Access Level", type: "select", options: ["super", "admin", "limited", "diag"] }] },
