@@ -13,13 +13,11 @@
         .input-field {
             @apply w-full px-3 py-2 border rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all duration-200;
         }
-        /* Explicitly style text inputs for the dark theme */
         input[type="text"].input-field, input[type="number"].input-field {
             background-color: #374151; /* gray-700 */
             border-color: #4B5563;   /* gray-600 */
             color: white;
         }
-        /* Override for select dropdowns to a light theme to ensure option visibility */
         select.input-field {
             background-color: #F9FAFB; /* gray-50 */
             border-color: #9CA3AF;   /* gray-400 */
@@ -107,7 +105,14 @@
                 "save_config": { name: "Save Configuration", base: "save-config <filename>", params: [{ name: "filename", label: "Filename", type: "text", placeholder: "e.g., backup-config.txt" }] },
                 "load_config": { name: "Load Configuration", base: "load-config <filename>", params: [{ name: "filename", label: "Filename", type: "text", placeholder: "e.g., backup-config.txt" }] },
                 "reset_factory_default": { name: "Reset to Factory Default", base: "reset-to-factory-default confirm <confirm_string>", params: [{ name: "confirm_string", label: "Confirmation String", type: "text", placeholder: "Type 'traffic-impacting-operation'" }] },
-                "set_feature_license": { name: "Set Feature License State", base: "set ciena-6500r-system:system features \"<feature_name>\" enabled <state>", params: [{ name: "feature_name", label: "Feature Name", type: "select", options: ["OTDR", "SPAN CALIBRATION", "NBI", "PASSIVE TERMINAL CONTROL", "ALARM CORRELATION", "PERFORMANCE MONITORING", "CONNECTION VALIDATION", "L0_CONTROL_PLANE", "ZTP"] }, { name: "state", label: "State", type: "select", options: ["true", "false"] }] }
+            },
+            "Licensing": {
+                 "set_feature_license": { name: "Set Feature License State", base: "set ciena-6500r-system:system features \"<feature_name>\" enabled <state>", params: [{ name: "feature_name", label: "Feature Name", type: "select", options: ["OTDR", "SPAN CALIBRATION", "NBI", "PASSIVE TERMINAL CONTROL", "ALARM CORRELATION", "PERFORMANCE MONITORING", "CONNECTION VALIDATION", "L0_CONTROL_PLANE", "ZTP"] }, { name: "state", label: "State", type: "select", options: ["true", "false"] }] },
+                "license_generate_request": { name: "Generate License Request", base: "license-file-generate-request", params: []},
+                "license_file_download": { name: "Download License File", base: "license-file-download remote-host <remote_host> download-mode scp remote-path <remote_path> filename <filename> login-id <username>", params: [{name: "remote_host", label: "Remote Host IP", type: "text"}, {name: "remote_path", label: "Remote Path", type: "text"}, {name: "filename", label: "License Filename", type: "text"}, {name: "username", label: "SFTP Username", type: "text"}]},
+                "license_client_activate": { name: "Activate License File", base: "license-client-activate filename <filename> location local", params: [{name: "filename", label: "License Filename", type: "text"}]},
+                "license_file_delete": { name: "Delete License File", base: "license-file-delete <filename>", params: [{name: "filename", label: "License Filename", type: "text"}]},
+                "show_license_info": { name: "Show License Info", base: "show license", params: []}
             },
             "Interfaces & IP": {
                 "set_ipv4_address": { name: "Set IPv4 Address", base: "set openconfig-interfaces:interfaces interface <interface_name> subinterfaces subinterface 0 ipv4 addresses address <ip_address> config prefix-length <prefix_length>", params: [{ name: "interface_name", label: "Interface Name", type: "select", options: ["colan-x", "colan-a", "loopback"] }, { name: "ip_address", label: "IPv4 Address", type: "text", placeholder: "e.g., 10.180.43.83" }, { name: "prefix_length", label: "Prefix Length", type: "number", placeholder: "e.g., 24" }] },
@@ -116,6 +121,12 @@
                 "show_interface_details": { name: "Show Interface Details", base: "show openconfig-interfaces:interfaces interface <interface_name>", params: [{ name: "interface_name", label: "Interface Name", type: "text", placeholder: "e.g., colan-x" }] },
                 "show_interface_counters": { name: "Show Interface Counters", base: "show openconfig-interfaces:interfaces interface <interface_name> state counters", params: [{ name: "interface_name", label: "Interface Name", type: "text", placeholder: "e.g., osc-1-50-1" }] },
                 "show_lldp_neighbors": { name: "Show LLDP Neighbors", base: "show openconfig-lldp:lldp interfaces interface <interface_name> neighbors", params: [{ name: "interface_name", label: "Interface Name", type: "text", placeholder: "e.g., colan-x" }] }
+            },
+            "NTP & System Time": {
+                "set_ntp_server": { name: "Set NTP Server", base: "set openconfig-system:system ntp servers server <ip_address> config address <ip_address> iburst true", params: [{name: "ip_address", label: "NTP Server IP", type: "text"}]},
+                "enable_ntp": { name: "Enable NTP Client", base: "set openconfig-system:system ntp config enabled true", params: []},
+                "show_ntp_config": { name: "Show NTP Configuration", base: "show openconfig-system:system ntp", params: []},
+                "set_system_time": { name: "Set System Time", base: "set-system-time time <datetime>", params: [{name: "datetime", label: "Date/Time (YYYY-MM-DDTHH:MM:SSZ)", type: "text"}]}
             },
             "Alarms": {
                 "show_active_alarms": { name: "Show All Active Alarms", base: "show active-alarm", params: [] },
