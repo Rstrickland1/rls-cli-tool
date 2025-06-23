@@ -13,14 +13,10 @@
         .input-field {
             @apply w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all duration-200;
         }
-        /* Added rule to fix dropdown text color */
         select.input-field {
-            color: black;
+            color: white; /* Make the selected text white */
         }
-        select.input-field:focus {
-            color: white;
-        }
-        option {
+        select option {
             background-color: white;
             color: black;
         }
@@ -105,7 +101,8 @@
                 "retrieve_logs": { name: "Retrieve Logs", base: "retrieve-logs slot <target> mode <mode>", params: [{ name: "target", label: "Target", type: "select", options: ["ALL", "CTM", "1", "2", "3", "4", "5", "6", "7", "8"] }, { name: "mode", label: "Mode", type: "select", options: ["full", "syseng"] }] },
                 "save_config": { name: "Save Configuration", base: "save-config <filename>", params: [{ name: "filename", label: "Filename", type: "text", placeholder: "e.g., backup-config.txt" }] },
                 "load_config": { name: "Load Configuration", base: "load-config <filename>", params: [{ name: "filename", label: "Filename", type: "text", placeholder: "e.g., backup-config.txt" }] },
-                "reset_factory_default": { name: "Reset to Factory Default", base: "reset-to-factory-default confirm <confirm_string>", params: [{ name: "confirm_string", label: "Confirmation String", type: "text", placeholder: "Type 'traffic-impacting-operation'" }] }
+                "reset_factory_default": { name: "Reset to Factory Default", base: "reset-to-factory-default confirm <confirm_string>", params: [{ name: "confirm_string", label: "Confirmation String", type: "text", placeholder: "Type 'traffic-impacting-operation'" }] },
+                "set_feature_license": { name: "Set Feature License State", base: "set ciena-6500r-system:system features \"<feature_name>\" enabled <state>", params: [{ name: "feature_name", label: "Feature Name", type: "select", options: ["OTDR", "SPAN CALIBRATION", "NBI", "PASSIVE TERMINAL CONTROL", "ALARM CORRELATION", "PERFORMANCE MONITORING", "CONNECTION VALIDATION"] }, { name: "state", label: "State", type: "select", options: ["true", "false"] }] }
             },
             "Interfaces & IP": {
                 "set_ipv4_address": { name: "Set IPv4 Address", base: "set openconfig-interfaces:interfaces interface <interface_name> subinterfaces subinterface 0 ipv4 addresses address <ip_address> config prefix-length <prefix_length>", params: [{ name: "interface_name", label: "Interface Name", type: "select", options: ["colan-x", "colan-a", "loopback"] }, { name: "ip_address", label: "IPv4 Address", type: "text", placeholder: "e.g., 10.180.43.83" }, { name: "prefix_length", label: "Prefix Length", type: "number", placeholder: "e.g., 24" }] },
@@ -136,6 +133,7 @@
             "Functional Groups (PFG)": {
                 "create_functional_group": { name: "Create Functional Group", base: "create functional-group <pfg_name> type <pfg_type>", params: [{ name: "pfg_name", label: "PFG Name", type: "text", placeholder: "e.g., LM-SiteA-East" }, { name: "pfg_type", label: "PFG Type", type: "select", options: ["LINE-MUX", "LINE-DEMUX", "SECTION-MUX", "SECTION-DEMUX", "CHANNEL-MUX", "CHANNEL-DEMUX"] }] },
                 "set_pfg_role": { name: "Set PFG Role", base: "set functional-group <pfg_name> roles <role_name> objects \"<object_path>\"", params: [{ name: "pfg_name", label: "PFG Name", type: "text", placeholder: "e.g., LM-SiteA-East" }, { name: "role_name", label: "Role", type: "select", options: ["BOOSTER", "PREAMP", "LINEOUT", "LINEIN", "WSS"] }, { name: "object_path", label: "Object Path", type: "text", placeholder: "e.g., slots 1 config amps Booster" }] },
+                 "set_pfg_attribute": { name: "Set PFG Attribute", base: "set functional-group <pfg_name> attrs <attr_name> value <attr_value>", params: [{ name: "pfg_name", label: "PFG Name", type: "text", placeholder: "e.g., LM-SiteA-East" }, { name: "attr_name", label: "Attribute Name", type: "select", options: ["BAND", "DEGREE", "OSCFIB", "DOWNSTR-PFG-NEIGHBOR", "UPSTR-PFG-NEIGHBOR"] }, { name: "attr_value", label: "Attribute Value", type: "text", placeholder: "e.g., BAND-C" }] },
                 "show_pfg_calibration": { name: "Show PFG Calibration (SCO)", base: "show sco <sco_name>", params: [{ name: "sco_name", label: "SCO Instance Name", type: "text", placeholder: "e.g., LM-SiteA-East-SCO" }] }
             },
             "OSRP & DTL (L0 Control Plane)": {
@@ -182,7 +180,7 @@
                 });
             }
 
-            const source = filter ? Array.from(filteredCategories) : Object.keys(commandDb);
+            const source = filter ? Array.from(filteredCategories).sort() : Object.keys(commandDb).sort();
             
             source.forEach(category => {
                 const option = document.createElement('option');
@@ -191,12 +189,10 @@
                 categorySelect.appendChild(option);
             });
             
-            if (Array.from(categorySelect.options).some(opt => opt.value === currentCategory)) {
-                categorySelect.value = currentCategory;
-            } else if (filter && categorySelect.options.length > 1) {
-                categorySelect.value = categorySelect.options[1].value;
-            } else {
-                 categorySelect.value = "";
+            if (filter) {
+                 categorySelect.value = ""; // Default to all categories when searching
+            } else if (Array.from(categorySelect.options).some(opt => opt.value === currentCategory)) {
+                 categorySelect.value = currentCategory;
             }
             populateCommands(filter);
         }
@@ -208,18 +204,25 @@
 
             const commandSource = selectedCategory ? { [selectedCategory]: commandDb[selectedCategory] } : commandDb;
             
+            let commandList = [];
             Object.keys(commandSource).forEach(category => {
                  const commands = commandSource[category];
                  Object.keys(commands).forEach(commandKey => {
                     const command = commands[commandKey];
                     if(filter === '' || command.name.toLowerCase().includes(filter) || command.base.toLowerCase().includes(filter)) {
-                        const option = document.createElement('option');
-                        option.value = commandKey;
-                        option.dataset.category = category;
-                        option.textContent = `(${category}) ${command.name}`;
-                        commandSelect.appendChild(option);
+                        commandList.push({ key: commandKey, category: category, name: command.name });
                     }
                  });
+            });
+
+            commandList.sort((a,b) => a.name.localeCompare(b.name));
+
+            commandList.forEach(cmd => {
+                const option = document.createElement('option');
+                option.value = cmd.key;
+                option.dataset.category = cmd.category;
+                option.textContent = `${cmd.name} (${cmd.category})`;
+                commandSelect.appendChild(option);
             });
             
              if(commandSelect.options.length > 1) {
