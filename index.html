@@ -13,7 +13,7 @@
         .input-field {
             @apply w-full px-3 py-2 border rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all duration-200;
         }
-        /* Style text inputs for the dark theme */
+        /* Explicitly style text inputs for the dark theme */
         input[type="text"].input-field, input[type="number"].input-field {
             background-color: #374151; /* gray-700 */
             border-color: #4B5563;   /* gray-600 */
@@ -142,6 +142,7 @@
                 "show_pfg_calibration": { name: "Show PFG Calibration (SCO)", base: "show sco <sco_name>", params: [{ name: "sco_name", label: "SCO Instance Name", type: "text", placeholder: "e.g., LM-SiteA-East-SCO" }] }
             },
             "OSRP & L0 Control Plane": {
+                "show_link": { name: "Show Link Details", base: "show link <link_name>", params: [{ name: "link_name", label: "Link Name", type: "text", placeholder: "e.g., LINEMUX-S3-P53-LINEOUT" }] },
                 "create_dtl": { name: "Create DTL Path", base: "create osrp <node_name> object dtl <dtl_name> label \"<label>\"", params: [{ name: "node_name", label: "Originating OSRP Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "dtl_name", label: "New DTL Name", type: "text", placeholder: "e.g., DTL_VAN_to_HAL" }, { name: "label", label: "Label", type: "text", placeholder: "e.g., Path to Halifax" }] },
                 "add_dtl_hop": { name: "Add a Hop to a DTL Path", base: "set osrp <node_name> object dtl <dtl_name> dtl-data <hop_node_name> link <link_id>", params: [{ name: "node_name", label: "Originating OSRP Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "dtl_name", label: "DTL Name", type: "text", placeholder: "e.g., DTL_VAN_to_HAL" }, { name: "hop_node_name", label: "Current Hop Node Name", type: "text", placeholder: "e.g., WINNIPEG:SECTIONMUX-S1" }, { name: "link_id", label: "OSRP Link ID for Next Hop", type: "text", placeholder: "e.g., 105300" }] },
                 "create_dtl_set": { name: "Create DTL Set", base: "create osrp <node_name> object dtl-set <set_name> source <source_node> destination <dest_node>", params: [{ name: "node_name", label: "Originating OSRP Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "set_name", label: "New DTL Set Name", type: "text", placeholder: "e.g., VAN_HAL_Set" }, { name: "source_node", label: "Source Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "dest_node", label: "Destination Node", type: "text", placeholder: "e.g., HALIFAX:CHANNELMUX-S6" }] },
