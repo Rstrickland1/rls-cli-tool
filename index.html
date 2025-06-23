@@ -13,11 +13,13 @@
         .input-field {
             @apply w-full px-3 py-2 border rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all duration-200;
         }
+        /* Explicitly style text inputs for the dark theme */
         input[type="text"].input-field, input[type="number"].input-field {
             background-color: #374151; /* gray-700 */
             border-color: #4B5563;   /* gray-600 */
             color: white;
         }
+        /* Override for select dropdowns to a light theme to ensure option visibility */
         select.input-field {
             background-color: #F9FAFB; /* gray-50 */
             border-color: #9CA3AF;   /* gray-400 */
@@ -106,7 +108,7 @@
                 "load_config": { name: "Load Configuration", base: "load-config <filename>", params: [{ name: "filename", label: "Filename", type: "text", placeholder: "e.g., backup-config.txt" }] },
                 "reset_factory_default": { name: "Reset to Factory Default", base: "reset-to-factory-default confirm <confirm_string>", params: [{ name: "confirm_string", label: "Confirmation String", type: "text", placeholder: "Type 'traffic-impacting-operation'" }] },
             },
-            "Licensing": {
+             "Licensing": {
                  "set_feature_license": { name: "Set Feature License State", base: "set ciena-6500r-system:system features \"<feature_name>\" enabled <state>", params: [{ name: "feature_name", label: "Feature Name", type: "select", options: ["OTDR", "SPAN CALIBRATION", "NBI", "PASSIVE TERMINAL CONTROL", "ALARM CORRELATION", "PERFORMANCE MONITORING", "CONNECTION VALIDATION", "L0_CONTROL_PLANE", "ZTP"] }, { name: "state", label: "State", type: "select", options: ["true", "false"] }] },
                 "license_generate_request": { name: "Generate License Request", base: "license-file-generate-request", params: []},
                 "license_file_download": { name: "Download License File", base: "license-file-download remote-host <remote_host> download-mode scp remote-path <remote_path> filename <filename> login-id <username>", params: [{name: "remote_host", label: "Remote Host IP", type: "text"}, {name: "remote_path", label: "Remote Path", type: "text"}, {name: "filename", label: "License Filename", type: "text"}, {name: "username", label: "SFTP Username", type: "text"}]},
@@ -139,6 +141,11 @@
                 "show_current_pm": { name: "Show Current PM", base: "show pm current instance \"<instance_id>\" pm-val <pm_val>", params: [{ name: "instance_id", label: "Instance Identifier", type: "text", placeholder: "e.g., slots 1 config amps Booster" }, { name: "pm_val", label: "PM Parameter", type: "select", options: ["opticalPowerInput", "opticalPowerOutput", "opticalReturnLoss"] }] },
                 "reset_pm_counters": { name: "Reset PM Counters", base: "reset-pm instance \"<instance_id>\" interval <interval>", params: [{ name: "instance_id", label: "Instance Identifier", type: "text", placeholder: "e.g., slots 1 config optmons 51" }, { name: "interval", label: "Interval", type: "select", options: ["untimed", "15min", "1day"] }] }
             },
+            "Channel Controller Service (CCS)": {
+                "show_ccs_config": { name: "Show CCS Configuration", base: "show ccs-instance <pfg_name> config", params: [{ name: "pfg_name", label: "PFG Name", type: "text", placeholder: "e.g., LINE-MUX-1" }] },
+                "show_ccs_channel": { name: "Show CCS Channel Details", base: "show ccs-instance <pfg_name> channel-controller <center_freq>", params: [{ name: "pfg_name", label: "PFG Name", type: "text", placeholder: "e.g., LINE-MUX-1" }, { name: "center_freq", label: "Center Frequency (MHz)", type: "number", placeholder: "e.g., 193400000" }] },
+                "load_ase": { name: "Load ASE on PFG", base: "load-ase name <pfg_name>", params: [{ name: "pfg_name", label: "PFG Name", type: "text", placeholder: "e.g., LINE-MUX-1" }] }
+            },
             "Photonic Facilities": {
                 "set_osc_facility": { name: "Set OSC Facility State", base: "set slots <slot> config slots <sub_slot> config oscs <osc_id> admin-state <state>", params: [{ name: "slot", label: "Slot Number", type: "number", placeholder: "e.g., 1" }, { name: "sub_slot", label: "Sub-slot (50 or 60)", type: "number", placeholder: "e.g., 50" }, { name: "osc_id", label: "OSC ID", type: "number", placeholder: "e.g., 1" }, { name: "state", label: "Admin State", type: "select", options: ["Enabled", "Disabled"] }] },
                 "set_amp_facility": { name: "Set Amplifier Facility", base: "set slots <slot> config amps <amp_name> target-gain <gain> gain-mode <mode>", params: [{ name: "slot", label: "Slot Number", type: "number", placeholder: "e.g., 3" }, { name: "amp_name", label: "Amplifier Name", type: "text", placeholder: "e.g., Booster" }, { name: "gain", label: "Target Gain (dB)", type: "number", placeholder: "e.g., 20.0" }, { name: "mode", label: "Gain Mode", type: "select", options: ["low", "high"] }] },
@@ -164,6 +171,7 @@
             },
             "Security & Users": {
                 "create_local_user": { name: "Create Local User", base: "create security-aaa local user <username> access-level <level>", params: [{ name: "username", label: "Username", type: "text", placeholder: "e.g., newadmin" }, { name: "level", label: "Access Level", type: "select", options: ["super", "admin", "limited", "diag"] }] },
+                "show_local_users": { name: "Show Local Users", base: "show security-aaa local user", params: [] },
                 "change_password": { name: "Change User Password", base: "change-password user-name <username>", params: [{ name: "username", label: "Username", type: "text", placeholder: "e.g., newadmin" }] },
                 "force_out_user": { name: "Force Out User Session", base: "force-out-user session <session_id>", params: [{ name: "session_id", label: "Session ID", type: "number", placeholder: "e.g., 5" }] },
                  "unlock_user": { name: "Unlock User", base: "unlock-user user-name <username>", params: [{ name: "username", label: "Username", type: "text", placeholder: "e.g., lockeduser" }] },
