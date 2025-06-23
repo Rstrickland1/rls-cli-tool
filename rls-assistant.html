@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciena RLS CLI Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .input-field {
+            @apply w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all duration-200;
+        }
+        .label {
+            @apply block text-sm font-medium text-gray-300 mb-1;
+        }
+        .btn {
+            @apply px-4 py-2 rounded-md font-semibold text-white transition-all duration-200;
+        }
+        .btn-primary {
+            @apply bg-cyan-600 hover:bg-cyan-700;
+        }
+        .btn-secondary {
+            @apply bg-gray-600 hover:bg-gray-700;
+        }
+        .btn-copy {
+            @apply bg-teal-600 hover:bg-teal-700;
+        }
+        /* For the copy feedback */
+        .copied {
+            @apply bg-green-600 hover:bg-green-700;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-cyan-400">Ciena RLS CLI Assistant</h1>
+            <p class="text-gray-400 mt-2">Select a command, or search, fill in the parameters, and generate the CLI script.</p>
+        </header>
+
+        <main class="bg-gray-800 p-6 rounded-lg shadow-2xl border border-gray-700">
+             <!-- Search Input -->
+            <div class="mb-6">
+                <label for="search-input" class="label">Search Commands</label>
+                <input type="text" id="search-input" class="input-field" placeholder="Type to search for commands...">
+            </div>
+            
+            <!-- Command Selection -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label for="category-select" class="label">Category</label>
+                    <select id="category-select" class="input-field">
+                        <option value="">-- Select a Category --</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="command-select" class="label">Command</label>
+                    <select id="command-select" class="input-field" disabled>
+                        <option value="">-- Select a Command --</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Dynamic Form for Parameters -->
+            <div id="params-form" class="space-y-4 mb-6">
+                <!-- Input fields will be dynamically inserted here -->
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-start space-x-4 mb-6">
+                <button id="generate-btn" class="btn btn-primary" disabled>Generate Command</button>
+                <button id="clear-btn" class="btn btn-secondary">Clear</button>
+            </div>
+
+            <!-- Output Area -->
+            <div>
+                <label class="label">Generated Command</label>
+                <div class="bg-gray-900 p-4 rounded-md border border-gray-600 relative">
+                    <pre><code id="output-command" class="text-cyan-300 whitespace-pre-wrap break-all"></code></pre>
+                    <button id="copy-btn" class="btn btn-copy absolute top-2 right-2 text-xs py-1 px-2" style="display: none;">Copy</button>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="text-center mt-8 text-gray-500 text-sm">
+            <p>Developed for easy CLI command generation. Hosted on GitHub.</p>
+        </footer>
+    </div>
+
+    <script>
+        const commandDb = {
+            "System & Hardware": {
+                "set_shelf_name": { name: "Set Shelf Name", base: "set shelf name \"<shelf_name>\"", params: [{ name: "shelf_name", label: "Shelf Name", type: "text", placeholder: "e.g., RLS-SiteA-1" }] },
+                "set_site_id": { name: "Set Site ID and Name", base: "set ciena-6500r-system:system id site id <site_id> name \"<site_name>\"", params: [{ name: "site_id", label: "Site ID", type: "number", placeholder: "e.g., 1001" }, { name: "site_name", label: "Site Name", type: "text", placeholder: "e.g., SiteA-POP" }] },
+                "create_circuit_pack": { name: "Create/Provision Circuit Pack", base: "create slots <slot_number> config circuit-pack pec <pec>", params: [{ name: "slot_number", label: "Slot Number", type: "text", placeholder: "e.g., 1" }, { name: "pec", label: "PEC Code", type: "text", placeholder: "e.g., NTK835NA" }] },
+                "show_shelf_inventory": { name: "Show Shelf Inventory", base: "show slots <slot_number> inventory circuit-pack", params: [{ name: "slot_number", label: "Slot Number", type: "text", placeholder: "e.g., 1" }] },
+                "restart_module": { name: "Restart Module", base: 'restart resource "slots <slot_number>" restart-type <restart_type>', params: [{ name: "slot_number", label: "Slot Number to Restart", type: "text", placeholder: "e.g., 5" }, { name: "restart_type", label: "Restart Type", type: "select", options: ["cold", "warm"] }] },
+                "retrieve_logs": { name: "Retrieve Logs", base: "retrieve-logs slot <target> mode <mode>", params: [{ name: "target", label: "Target", type: "select", options: ["ALL", "CTM", "1", "2", "3", "4", "5", "6", "7", "8"] }, { name: "mode", label: "Mode", type: "select", options: ["full", "syseng"] }] },
+                "save_config": { name: "Save Configuration", base: "save-config <filename>", params: [{ name: "filename", label: "Filename", type: "text", placeholder: "e.g., backup-config.txt" }] },
+                "load_config": { name: "Load Configuration", base: "load-config <filename>", params: [{ name: "filename", label: "Filename", type: "text", placeholder: "e.g., backup-config.txt" }] },
+                "reset_factory_default": { name: "Reset to Factory Default", base: "reset-to-factory-default confirm <confirm_string>", params: [{ name: "confirm_string", label: "Confirmation String", type: "text", placeholder: "Type 'traffic-impacting-operation'" }] }
+            },
+            "Interfaces & IP": {
+                "set_ip_address": { name: "Set IPv4 Address on Interface", base: "set openconfig-interfaces:interfaces interface <interface_name> subinterfaces subinterface 0 ipv4 addresses address <ip_address> config prefix-length <prefix_length>", params: [{ name: "interface_name", label: "Interface Name", type: "select", options: ["colan-x", "colan-a", "loopback"] }, { name: "ip_address", label: "IPv4 Address", type: "text", placeholder: "e.g., 10.180.43.83" }, { name: "prefix_length", label: "Prefix Length", type: "number", placeholder: "e.g., 24" }] },
+                "set_unnumbered_interface": { name: "Set Unnumbered Interface", base: "set openconfig-interfaces:interfaces interface <interface_name> subinterfaces subinterface 0 ipv4 unnumbered interface-ref config interface loopback subinterface 0", params: [{ name: "interface_name", label: "Interface Name", type: "text", placeholder: "e.g., osc-1-50-1" }] },
+                "show_interface_details": { name: "Show Interface Details", base: "show openconfig-interfaces:interfaces interface <interface_name>", params: [{ name: "interface_name", label: "Interface Name", type: "text", placeholder: "e.g., colan-x" }] },
+                "show_interface_counters": { name: "Show Interface Counters", base: "show openconfig-interfaces:interfaces interface <interface_name> state counters", params: [{ name: "interface_name", label: "Interface Name", type: "text", placeholder: "e.g., osc-1-50-1" }] },
+                "show_lldp_neighbors": { name: "Show LLDP Neighbors", base: "show openconfig-lldp:lldp interfaces interface <interface_name> neighbors", params: [{ name: "interface_name", label: "Interface Name", type: "text", placeholder: "e.g., colan-x" }] }
+            },
+            "Alarms": {
+                "show_active_alarms": { name: "Show All Active Alarms", base: "show active-alarm", params: [] },
+                "show_alarm_counts": { name: "Show Alarm Counts", base: "show alarm-counts", params: [] },
+                "add_alarm_note": { name: "Add Note to Alarm", base: "add-notes id <alarm_id> user-notes \"<note_text>\"", params: [{ name: "alarm_id", label: "Alarm ID", type: "text", placeholder: "e.g., 12345" }, { name: "note_text", label: "Note Text", type: "text", placeholder: "e.g., Investigating fiber connection." }] },
+                "modify_alarm_template": { name: "Modify Alarm Template", base: "set changed-alarms <alarm_name> severity <severity> service-impact <service_impact>", params: [{ name: "alarm_name", label: "Alarm Name", type: "text", placeholder: "e.g., EquipmentFailure" }, { name: "severity", label: "Severity", type: "select", options: ["critical", "major", "minor", "warning", "not-alarmed"] }, { name: "service_impact", label: "Service Impact", type: "select", options: ["service-affecting", "non-service-affecting"] }] }
+            },
+            "Performance Monitoring (PM)": {
+                "show_current_pm": { name: "Show Current PM", base: "show pm current instance \"<instance_id>\" pm-val <pm_val>", params: [{ name: "instance_id", label: "Instance Identifier", type: "text", placeholder: "e.g., slots 1 config amps Booster" }, { name: "pm_val", label: "PM Parameter", type: "select", options: ["opticalPowerInput", "opticalPowerOutput", "opticalReturnLoss"] }] },
+                "reset_pm_counters": { name: "Reset PM Counters", base: "reset-pm instance \"<instance_id>\" interval <interval>", params: [{ name: "instance_id", label: "Instance Identifier", type: "text", placeholder: "e.g., slots 1 config optmons 51" }, { name: "interval", label: "Interval", type: "select", options: ["untimed", "15min", "1day"] }] }
+            },
+            "Photonic Facilities": {
+                "set_osc_facility": { name: "Set OSC Facility State", base: "set slots <slot> config slots <sub_slot> config oscs <osc_id> admin-state <state>", params: [{ name: "slot", label: "Slot Number", type: "number", placeholder: "e.g., 1" }, { name: "sub_slot", label: "Sub-slot (50 or 60)", type: "number", placeholder: "e.g., 50" }, { name: "osc_id", label: "OSC ID", type: "number", placeholder: "e.g., 1" }, { name: "state", label: "Admin State", type: "select", options: ["Enabled", "Disabled"] }] },
+                "set_amp_facility": { name: "Set Amplifier Facility", base: "set slots <slot> config amps <amp_name> target-gain <gain> gain-mode <mode>", params: [{ name: "slot", label: "Slot Number", type: "number", placeholder: "e.g., 3" }, { name: "amp_name", label: "Amplifier Name", type: "text", placeholder: "e.g., Booster" }, { name: "gain", label: "Target Gain (dB)", type: "number", placeholder: "e.g., 20.0" }, { name: "mode", label: "Gain Mode", type: "select", options: ["low", "high"] }] },
+                "start_otdr_trace": { name: "Start OTDR Trace", base: "start-otdr-trace name <facility_name> trace-type <type>", params: [{ name: "facility_name", label: "OTDR Facility Name", type: "text", placeholder: "e.g., slots/1/config/otdr/3" }, { name: "type", label: "Trace Type", type: "select", options: ["long", "short", "office"] }] },
+                "show_otdr_events": { name: "Show OTDR Events", base: "show-otdr-events name <facility_name> trace-type <type> trace-tag <tag>", params: [{ name: "facility_name", label: "OTDR Facility Name", type: "text", placeholder: "e.g., slots/1/config/otdr/3" }, { name: "type", label: "Trace Type", type: "select", options: ["long", "short", "office"] }, { name: "tag", label: "Trace Tag", type: "select", options: ["current", "baseline"] }] },
+                "set_protection_switch": { name: "Set Protection Switch", base: "protection-switch resource \"slots <slot> config protection-group <group_id>\" switch <switch_index> switch-action <action>", params: [{ name: "slot", label: "TPS/SSM Slot", type: "number", placeholder: "e.g., 1" }, { name: "group_id", label: "Group ID", type: "number", placeholder: "e.g., 1" }, { name: "switch_index", label: "Switch Index", type: "select", options: ["1", "2"] }, { name: "action", label: "Switch Action", type: "select", options: ["manual", "force", "release"] }] }
+            },
+            "Functional Groups (PFG)": {
+                "create_functional_group": { name: "Create Functional Group", base: "create functional-group <pfg_name> type <pfg_type>", params: [{ name: "pfg_name", label: "PFG Name", type: "text", placeholder: "e.g., LM-SiteA-East" }, { name: "pfg_type", label: "PFG Type", type: "select", options: ["LINE-MUX", "LINE-DEMUX", "SECTION-MUX", "SECTION-DEMUX", "CHANNEL-MUX", "CHANNEL-DEMUX"] }] },
+                "set_pfg_role": { name: "Set PFG Role", base: "set functional-group <pfg_name> roles <role_name> objects \"<object_path>\"", params: [{ name: "pfg_name", label: "PFG Name", type: "text", placeholder: "e.g., LM-SiteA-East" }, { name: "role_name", label: "Role", type: "select", options: ["BOOSTER", "PREAMP", "LINEOUT", "LINEIN", "WSS"] }, { name: "object_path", label: "Object Path", type: "text", placeholder: "e.g., slots 1 config amps Booster" }] },
+                "show_pfg_calibration": { name: "Show PFG Calibration (SCO)", base: "show sco <sco_name>", params: [{ name: "sco_name", label: "SCO Instance Name", type: "text", placeholder: "e.g., LM-SiteA-East-SCO" }] }
+            },
+            "OSRP & DTL (L0 Control Plane)": {
+                "create_dtl": { name: "Create DTL Path", base: "create osrp <node_name> object dtl <dtl_name> label \"<label>\"", params: [{ name: "node_name", label: "Originating OSRP Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "dtl_name", label: "New DTL Name", type: "text", placeholder: "e.g., DTL_VAN_to_HAL" }, { name: "label", label: "Label", type: "text", placeholder: "e.g., Path to Halifax" }] },
+                "add_dtl_hop": { name: "Add a Hop to a DTL Path", base: "set osrp <node_name> object dtl <dtl_name> dtl-data <hop_node_name> link <link_id>", params: [{ name: "node_name", label: "Originating OSRP Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "dtl_name", label: "DTL Name", type: "text", placeholder: "e.g., DTL_VAN_to_HAL" }, { name: "hop_node_name", label: "Current Hop Node Name", type: "text", placeholder: "e.g., WINNIPEG:SECTIONMUX-S1" }, { name: "link_id", label: "OSRP Link ID for Next Hop", type: "text", placeholder: "e.g., 105300" }] },
+                "create_dtl_set": { name: "Create DTL Set", base: "create osrp <node_name> object dtl-set <set_name> source <source_node> destination <dest_node>", params: [{ name: "node_name", label: "Originating OSRP Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "set_name", label: "New DTL Set Name", type: "text", placeholder: "e.g., VAN_HAL_Set" }, { name: "source_node", label: "Source Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "dest_node", label: "Destination Node", type: "text", placeholder: "e.g., HALIFAX:CHANNELMUX-S6" }] },
+                "add_dtl_to_set": { name: "Add DTL to a DTL Set", base: "set osrp <node_name> object dtl-set <set_name> members <dtl_name>", params: [{ name: "node_name", label: "Originating OSRP Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "set_name", label: "DTL Set Name", type: "text", placeholder: "e.g., VAN_HAL_Set" }, { name: "dtl_name", label: "DTL Name to Add", type: "text", placeholder: "e.g., DTL_VAN_to_HAL" }] }
+            },
+            "Security & Users": {
+                "create_local_user": { name: "Create Local User", base: "create security-aaa local user <username> access-level <level>", params: [{ name: "username", label: "Username", type: "text", placeholder: "e.g., newadmin" }, { name: "level", label: "Access Level", type: "select", options: ["super", "admin", "limited", "diag"] }] },
+                "change_password": { name: "Change User Password", base: "change-password user-name <username>", params: [{ name: "username", label: "Username", type: "text", placeholder: "e.g., newadmin" }] },
+                "force_out_user": { name: "Force Out User Session", base: "force-out-user session <session_id>", params: [{ name: "session_id", label: "Session ID", type: "number", placeholder: "e.g., 5" }] },
+                "set_intrusion_detection": { name: "Set Intrusion Detection", base: "set security-config intrusion admin-state <state> intrusion-threshold <threshold> lockout-duration <duration>", params: [{ name: "state", label: "Admin State", type: "select", options: ["Enabled", "Disabled"]}, { name: "threshold", label: "Threshold (2-20)", type: "number", placeholder: "e.g., 5" }, { name: "duration", label: "Lockout Duration (sec, 0-7200)", type: "number", placeholder: "e.g., 900" }] }
+            },
+            "Software Management": {
+                "software_install": { name: "Install Software (One-Step)", base: "software-install uri <uri>", params: [{ name: "uri", label: "Software URI", type: "text", placeholder: "sftp://user:pass@host/path/file.tgz" }] },
+                "software_activate": { name: "Activate Software", base: "software-activate", params: [] },
+                "software_commit": { name: "Commit Software", base: "software-commit", params: [] },
+                "software_delete": { name: "Delete Software Package", base: "software-delete version <version>", params: [{ name: "version", label: "Software Version", type: "text", placeholder: "e.g., RLS-04.00.00.xxxx" }] }
+            }
+        };
+
+        const searchInput = document.getElementById('search-input');
+        const categorySelect = document.getElementById('category-select');
+        const commandSelect = document.getElementById('command-select');
+        const paramsForm = document.getElementById('params-form');
+        const generateBtn = document.getElementById('generate-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const outputCommand = document.getElementById('output-command');
+        const copyBtn = document.getElementById('copy-btn');
+        
+        function populateCategories(filter = '') {
+            const currentCategory = categorySelect.value;
+            categorySelect.innerHTML = '<option value="">-- All Categories --</option>';
+            Object.keys(commandDb).forEach(category => {
+                 if (filter === '' || category.toLowerCase().includes(filter.toLowerCase())) {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    categorySelect.appendChild(option);
+                 }
+            });
+             // Try to preserve selection
+            if (Array.from(categorySelect.options).some(opt => opt.value === currentCategory)) {
+                categorySelect.value = currentCategory;
+            } else if (categorySelect.options.length > 1) {
+                categorySelect.value = categorySelect.options[1].value;
+            } else {
+                 categorySelect.value = "";
+            }
+            populateCommands(filter);
+        }
+        
+        function populateCommands(filter = '') {
+            const selectedCategory = categorySelect.value;
+            commandSelect.innerHTML = '<option value="">-- Select a Command --</option>';
+            commandSelect.disabled = true;
+
+            const commandSource = selectedCategory ? { [selectedCategory]: commandDb[selectedCategory] } : commandDb;
+            
+            Object.keys(commandSource).forEach(category => {
+                 const commands = commandSource[category];
+                 Object.keys(commands).forEach(commandKey => {
+                    const command = commands[commandKey];
+                    if(filter === '' || command.name.toLowerCase().includes(filter.toLowerCase()) || command.base.toLowerCase().includes(filter.toLowerCase())) {
+                        const option = document.createElement('option');
+                        option.value = commandKey;
+                        option.dataset.category = category;
+                        option.textContent = command.name;
+                        commandSelect.appendChild(option);
+                    }
+                 });
+            });
+            
+             if(commandSelect.options.length > 1) {
+                commandSelect.disabled = false;
+             }
+        }
+        
+        // Initial Population
+        populateCategories();
+
+        // Event Listeners
+         searchInput.addEventListener('input', () => {
+            const searchTerm = searchInput.value.toLowerCase();
+            populateCategories(searchTerm);
+        });
+
+        categorySelect.addEventListener('change', () => {
+            populateCommands(searchInput.value.toLowerCase());
+            paramsForm.innerHTML = '';
+            outputCommand.textContent = '';
+            copyBtn.style.display = 'none';
+            generateBtn.disabled = true;
+        });
+
+        commandSelect.addEventListener('change', () => {
+            const selectedCommandKey = commandSelect.value;
+            const selectedOption = commandSelect.options[commandSelect.selectedIndex];
+            const selectedCategory = selectedOption.dataset.category;
+            paramsForm.innerHTML = '';
+            outputCommand.textContent = '';
+            copyBtn.style.display = 'none';
+
+            if (selectedCommandKey && selectedCategory) {
+                 // If a command is selected, ensure the category dropdown reflects that
+                if (categorySelect.value !== selectedCategory) {
+                    categorySelect.value = selectedCategory;
+                }
+                
+                generateBtn.disabled = false;
+                const command = commandDb[selectedCategory][selectedCommandKey];
+                if (command.params.length === 0) {
+                     generateBtn.click(); // Auto-generate if no params
+                }
+                command.params.forEach(param => {
+                    let inputHtml = '';
+                    if (param.type === 'select') {
+                        const optionsHtml = param.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+                        inputHtml = `<select id="param-${param.name}" class="input-field">${optionsHtml}</select>`;
+                    } else {
+                        inputHtml = `<input type="${param.type}" id="param-${param.name}" class="input-field" placeholder="${param.placeholder || ''}">`;
+                    }
+                    
+                    const paramDiv = document.createElement('div');
+                    paramDiv.innerHTML = `<label for="param-${param.name}" class="label">${param.label}</label>${inputHtml}`;
+                    paramsForm.appendChild(paramDiv);
+                });
+            } else {
+                generateBtn.disabled = true;
+            }
+        });
+
+        generateBtn.addEventListener('click', () => {
+            const selectedOption = commandSelect.options[commandSelect.selectedIndex];
+            if (!selectedOption) return;
+            const selectedCategory = selectedOption.dataset.category;
+            const selectedCommandKey = selectedOption.value;
+
+            if (!selectedCategory || !selectedCommandKey) return;
+
+            const command = commandDb[selectedCategory][selectedCommandKey];
+            let finalCommand = command.base;
+
+            command.params.forEach(param => {
+                const inputElement = document.getElementById(`param-${param.name}`);
+                if (inputElement) {
+                    const value = inputElement.value;
+                    const placeholder = `<${param.name}>`;
+                    finalCommand = finalCommand.replace(placeholder, value || param.placeholder);
+                }
+            });
+
+            outputCommand.textContent = finalCommand;
+            copyBtn.style.display = 'block';
+            copyBtn.textContent = 'Copy';
+            copyBtn.classList.remove('copied');
+        });
+        
+        copyBtn.addEventListener('click', () => {
+            const textToCopy = outputCommand.textContent;
+            const textArea = document.createElement('textarea');
+            textArea.value = textToCopy;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                copyBtn.textContent = 'Copied!';
+                copyBtn.classList.add('copied');
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+            document.body.removeChild(textArea);
+        });
+
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            populateCategories(); // Reset categories to all
+            commandSelect.innerHTML = '<option value="">-- Select a Command --</option>';
+            commandSelect.disabled = true;
+            paramsForm.innerHTML = '';
+            outputCommand.textContent = '';
+            generateBtn.disabled = true;
+            copyBtn.style.display = 'none';
+        });
+
+    </script>
+</body>
+</html>
