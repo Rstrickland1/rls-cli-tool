@@ -11,18 +11,13 @@
             font-family: 'Inter', sans-serif;
         }
         .input-field {
-            @apply w-full px-3 py-2 border rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all duration-200;
+            @apply w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all duration-200;
         }
-        /* Explicitly style text inputs for the dark theme */
-        input.input-field {
-            background-color: #374151; /* gray-700 */
-            border-color: #4B5563;   /* gray-600 */
-            color: white;
-        }
-        /* Override for select dropdowns to a light theme to ensure option visibility */
         select.input-field {
-            background-color: #F3F4F6; /* gray-100 */
-            border-color: #9CA3AF;   /* gray-400 */
+            color: white; /* Make the selected text white */
+        }
+        select option {
+            background-color: white;
             color: black;
         }
         .label {
@@ -107,7 +102,7 @@
                 "save_config": { name: "Save Configuration", base: "save-config <filename>", params: [{ name: "filename", label: "Filename", type: "text", placeholder: "e.g., backup-config.txt" }] },
                 "load_config": { name: "Load Configuration", base: "load-config <filename>", params: [{ name: "filename", label: "Filename", type: "text", placeholder: "e.g., backup-config.txt" }] },
                 "reset_factory_default": { name: "Reset to Factory Default", base: "reset-to-factory-default confirm <confirm_string>", params: [{ name: "confirm_string", label: "Confirmation String", type: "text", placeholder: "Type 'traffic-impacting-operation'" }] },
-                "set_feature_license": { name: "Set Feature License State", base: "set ciena-6500r-system:system features \"<feature_name>\" enabled <state>", params: [{ name: "feature_name", label: "Feature Name", type: "select", options: ["OTDR", "SPAN CALIBRATION", "NBI", "PASSIVE TERMINAL CONTROL", "ALARM CORRELATION", "PERFORMANCE MONITORING", "CONNECTION VALIDATION"] }, { name: "state", label: "State", type: "select", options: ["true", "false"] }] }
+                "set_feature_license": { name: "Set Feature License State", base: "set ciena-6500r-system:system features \"<feature_name>\" enabled <state>", params: [{ name: "feature_name", label: "Feature Name", type: "select", options: ["OTDR", "SPAN CALIBRATION", "NBI", "PASSIVE TERMINAL CONTROL", "ALARM CORRELATION", "PERFORMANCE MONITORING", "CONNECTION VALIDATION", "L0_CONTROL_PLANE", "ZTP"] }, { name: "state", label: "State", type: "select", options: ["true", "false"] }] }
             },
             "Interfaces & IP": {
                 "set_ipv4_address": { name: "Set IPv4 Address", base: "set openconfig-interfaces:interfaces interface <interface_name> subinterfaces subinterface 0 ipv4 addresses address <ip_address> config prefix-length <prefix_length>", params: [{ name: "interface_name", label: "Interface Name", type: "select", options: ["colan-x", "colan-a", "loopback"] }, { name: "ip_address", label: "IPv4 Address", type: "text", placeholder: "e.g., 10.180.43.83" }, { name: "prefix_length", label: "Prefix Length", type: "number", placeholder: "e.g., 24" }] },
@@ -145,12 +140,14 @@
                 "create_dtl": { name: "Create DTL Path", base: "create osrp <node_name> object dtl <dtl_name> label \"<label>\"", params: [{ name: "node_name", label: "Originating OSRP Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "dtl_name", label: "New DTL Name", type: "text", placeholder: "e.g., DTL_VAN_to_HAL" }, { name: "label", label: "Label", type: "text", placeholder: "e.g., Path to Halifax" }] },
                 "add_dtl_hop": { name: "Add a Hop to a DTL Path", base: "set osrp <node_name> object dtl <dtl_name> dtl-data <hop_node_name> link <link_id>", params: [{ name: "node_name", label: "Originating OSRP Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "dtl_name", label: "DTL Name", type: "text", placeholder: "e.g., DTL_VAN_to_HAL" }, { name: "hop_node_name", label: "Current Hop Node Name", type: "text", placeholder: "e.g., WINNIPEG:SECTIONMUX-S1" }, { name: "link_id", label: "OSRP Link ID for Next Hop", type: "text", placeholder: "e.g., 105300" }] },
                 "create_dtl_set": { name: "Create DTL Set", base: "create osrp <node_name> object dtl-set <set_name> source <source_node> destination <dest_node>", params: [{ name: "node_name", label: "Originating OSRP Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "set_name", label: "New DTL Set Name", type: "text", placeholder: "e.g., VAN_HAL_Set" }, { name: "source_node", label: "Source Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "dest_node", label: "Destination Node", type: "text", placeholder: "e.g., HALIFAX:CHANNELMUX-S6" }] },
-                "add_dtl_to_set": { name: "Add DTL to a DTL Set", base: "set osrp <node_name> object dtl-set <set_name> members <dtl_name>", params: [{ name: "node_name", label: "Originating OSRP Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "set_name", label: "DTL Set Name", type: "text", placeholder: "e.g., VAN_HAL_Set" }, { name: "dtl_name", label: "DTL Name to Add", type: "text", placeholder: "e.g., DTL_VAN_to_HAL" }] }
+                "add_dtl_to_set": { name: "Add DTL to a DTL Set", base: "set osrp <node_name> object dtl-set <set_name> members <dtl_name>", params: [{ name: "node_name", label: "Originating OSRP Node", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "set_name", label: "DTL Set Name", type: "text", placeholder: "e.g., VAN_HAL_Set" }, { name: "dtl_name", label: "DTL Name to Add", type: "text", placeholder: "e.g., DTL_VAN_to_HAL" }] },
+                "delete_dtl": { name: "Delete DTL", base: "delete osrp <node_name> object dtl <dtl_name>", params: [{ name: "node_name", label: "OSRP Node Name", type: "text", placeholder: "e.g., VANCOUVER:CHMUX-S6" }, { name: "dtl_name", label: "DTL Name", type: "text", placeholder: "e.g., DTL_VAN_to_HAL" }] }
             },
             "Security & Users": {
                 "create_local_user": { name: "Create Local User", base: "create security-aaa local user <username> access-level <level>", params: [{ name: "username", label: "Username", type: "text", placeholder: "e.g., newadmin" }, { name: "level", label: "Access Level", type: "select", options: ["super", "admin", "limited", "diag"] }] },
                 "change_password": { name: "Change User Password", base: "change-password user-name <username>", params: [{ name: "username", label: "Username", type: "text", placeholder: "e.g., newadmin" }] },
                 "force_out_user": { name: "Force Out User Session", base: "force-out-user session <session_id>", params: [{ name: "session_id", label: "Session ID", type: "number", placeholder: "e.g., 5" }] },
+                 "unlock_user": { name: "Unlock User", base: "unlock-user user-name <username>", params: [{ name: "username", label: "Username", type: "text", placeholder: "e.g., lockeduser" }] },
                 "set_intrusion_detection": { name: "Set Intrusion Detection", base: "set security-config intrusion admin-state <state> intrusion-threshold <threshold> lockout-duration <duration>", params: [{ name: "state", label: "Admin State", type: "select", options: ["Enabled", "Disabled"]}, { name: "threshold", label: "Threshold (2-20)", type: "number", placeholder: "e.g., 5" }, { name: "duration", label: "Lockout Duration (sec, 0-7200)", type: "number", placeholder: "e.g., 900" }] }
             },
             "Software Management": {
